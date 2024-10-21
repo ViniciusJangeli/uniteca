@@ -1,8 +1,10 @@
 'use client'
 import Logo from "@/app/components/General/Logo";
+import api from "@/utils/api";
 import { Box, Button, TextField, Typography } from "@mui/material";
 import Link from "next/link";
 import { useForm } from "react-hook-form"; // Importação correta
+import toast from "react-hot-toast";
 
 type FormValues = {
     login: string;
@@ -13,7 +15,12 @@ export default function LoginScreen() {
     const { handleSubmit, register } = useForm<FormValues>(); // Registro de campos
 
     const onSubmit = (data: FormValues) => {
-        console.log(data);
+        toast.promise(api.post('/auth/login', data), {
+            loading: 'Carregando...',
+            success: (res) => {return res.data.message},
+            error: (err) => {return err.data.message}
+        })
+        
     };
 
     return (
@@ -39,12 +46,14 @@ export default function LoginScreen() {
                         <TextField
                             placeholder="Digite seu CPF ou E-mail"
                             label="CPF/E-mail"
+                            required={true}
                             {...register("login")} // Registrar o campo no useForm
                         />
                         <TextField
                             placeholder="Digite sua Senha"
                             label="Senha"
                             type="password"
+                            required={true}
                             {...register("password")} // Registrar o campo no useForm
                         />
                         <Button type="submit" variant="contained" className="bg-primary_text hover:bg-second_text h-16">
