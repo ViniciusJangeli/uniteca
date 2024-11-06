@@ -5,16 +5,16 @@ import { useRouter } from 'next/navigation';
 import LoginScreen from '@/app/(pages)/login/page';
 
 export default function Home() {
-  const user = false; // Simulando que o usuário não está logado
   const router = useRouter();
 
   useEffect(() => {
-    if (user) {
+    const token = localStorage.getItem('token');
+    if (token) {
       router.push('/home');
     }
-  }, [user, router]);
+  }, [router]);
 
   return (
-      <LoginScreen/>
+      <LoginScreen />
   );
 }
