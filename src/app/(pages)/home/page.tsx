@@ -1,12 +1,11 @@
 'use client'
 
-import NavBar from "@/app/components/NavBar/page";
+import { Box } from "@mui/material";
 
 export default function HomePage() {
   return (
-    <NavBar>
-      <div>Conteúdo da página inicial</div>
-      {/* Aqui vai o conteúdo da sua página */}
-    </NavBar>
+    <Box>
+      ta no inicio
+    </Box>
   );
 }
