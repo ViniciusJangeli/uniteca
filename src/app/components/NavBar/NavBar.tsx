@@ -1,181 +1,168 @@
 "use client";
-/* eslint-disable @next/next/no-img-element */
+
+import React, { useState } from "react";
 import {
-  Avatar,
-  Box,
-  CssBaseline,
-  Divider,
-  Drawer,
-  IconButton,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  styled,
+  AppBar,
   Toolbar,
   Typography,
-  useTheme
+  Button,
+  Avatar,
+  Menu,
+  MenuItem,
+  IconButton,
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Divider,
+  useMediaQuery,
 } from "@mui/material";
-import MenuIcon from "@mui/icons-material/Menu";
-import { useEffect, useState } from "react";
-import InboxIcon from "@mui/icons-material/MoveToInbox";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import MuiAppBar, { AppBarProps as MuiAppBarProps } from "@mui/material/AppBar";
-import Link from "next/link";
+import { Box, styled, useTheme } from "@mui/system";
+import { AccountCircle, Menu as MenuIcon, Book, People, Assignment, Home } from "@mui/icons-material";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 
-
-const drawerWidth = 240;
-
-function stringToColor(string: string) {
-  let hash = 0;
-  for (let i = 0; i < string.length; i++) {
-    hash = string.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  let color = "#";
-  for (let i = 0; i < 3; i++) {
-    const value = (hash >> (i * 8)) & 0xff;
-    color += `00${value.toString(16)}`.slice(-2);
-  }
-  return color;
-}
-
-function stringAvatar(name: string) {
-  return {
-    sx: { bgcolor: stringToColor(name) },
-    children: `${name.split(" ")[0][0]}${name.split(" ")[1][0]}`,
-  };
-}
-
-
-interface AppBarProps extends MuiAppBarProps {
-  open?: boolean;
-}
-
-const AppBar = styled(MuiAppBar, {
-  shouldForwardProp: (prop) => prop !== "open",
-})<AppBarProps>(({ theme, open }) => ({
-  transition: theme.transitions.create(["margin", "width"], {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.leavingScreen,
-  }),
+const StyledAppBar = styled(AppBar)({
   backgroundColor: "#005387",
-  ...(open && {
-    width: `calc(100% - ${drawerWidth}px)`,
-    marginLeft: drawerWidth,
-    transition: theme.transitions.create(["margin", "width"], {
-      easing: theme.transitions.easing.easeOut,
-      duration: theme.transitions.duration.enteringScreen,
-    }),
-  }),
-}));
+  height: "80px",
+});
 
-const DrawerHeader = styled("div")(({ theme }) => ({
+const StyledToolbar = styled(Toolbar)({
+  height: "100%",
   display: "flex",
-  alignItems: "center",
-  padding: theme.spacing(0, 1),
-  ...theme.mixins.toolbar,
-  justifyContent: "flex-end",
-}));
+  justifyContent: "space-between",
+});
 
+const MenuButton = styled(Button)({
+  color: "#FFFFFF",
+  marginRight: "16px",
+  fontSize: '16px',
+});
 
-
-export default function NewNavBar() {
+export default function NavBar() {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const router = useRouter();
   const theme = useTheme();
-  const [open, setOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  const routes = [
-    { key: 1, name: "Livros", icon: <InboxIcon />, link: "/books/home" },
-    { key: 2, name: "Empréstimos", icon: <InboxIcon />, link: "/books/home" },
-    { key: 3, name: "Usuários", icon: <InboxIcon />, link: "/books/home" },
+  const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleDrawerToggle = () => {
+    setDrawerOpen(!drawerOpen);
+  };
+
+  const menuItems = [
+    { text: 'Início', icon: <Home />, onClick: () => router.push('/inicio') },
+    { text: 'Livros', icon: <Book />, onClick: () => router.push('/livros') },
+    { text: 'Empréstimos', icon: <Assignment />, onClick: () => router.push('/emprestimos') },
+    { text: 'Usuários', icon: <People />, onClick: () => router.push('/usuarios') },
   ];
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    setIsLoggedIn(!!token);
-  }, []);
-
-  const handleDrawerOpen = () => setOpen(true);
-  const handleDrawerClose = () => setOpen(false);
-
-
-  if (!isLoggedIn) {
-    return null;
-  }
+  const drawer = (
+    <Box sx={{ width: 250 }} role="presentation" onClick={handleDrawerToggle}>
+      <List>
+        {menuItems.map((item, index) => (
+          <ListItem sx={{cursor: 'pointer'}} button key={item.text} onClick={item.onClick}>
+            <ListItemIcon>{item.icon}</ListItemIcon>
+            <ListItemText primary={item.text} />
+          </ListItem>
+        ))}
+      </List>
+      <Divider />
+      <List>
+        <ListItem sx={{cursor: 'pointer'}} button onClick={() => router.push('/perfil')}>
+          <ListItemIcon><AccountCircle /></ListItemIcon>
+          <ListItemText primary="Meu Perfil" />
+        </ListItem>
+        <ListItem sx={{cursor: 'pointer'}} button onClick={() => console.log('Logout')}>
+          <ListItemIcon><AccountCircle /></ListItemIcon>
+          <ListItemText primary="Sair" />
+        </ListItem>
+      </List>
+    </Box>
+  );
 
   return (
-    <Box sx={{mb: 12}}>
-      <CssBaseline />
-      <AppBar position="fixed" sx={{mb: 12}}>
-        <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-          <Box sx={{ display: "flex" }}>
+    <>
+      <StyledAppBar position="static">
+        <StyledToolbar>
+          <Image
+            src="/images/LogoBranco.svg"
+            alt="Logo Uniteca"
+            priority
+            width={150}
+            height={150}
+          />
+          {isMobile ? (
             <IconButton
               color="inherit"
               aria-label="open drawer"
-              onClick={handleDrawerOpen}
               edge="start"
-              sx={{ mr: 2, ...(open && { display: "none" }) }}
+              onClick={handleDrawerToggle}
             >
               <MenuIcon />
             </IconButton>
-            {!open && (
-              <img
-                src="/images/LogoBranco.svg"
-                alt="Logo Uniteca"
-                width={150}
-              />
-            )}
-          </Box>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <Typography sx={{ display: { xs: "none", md: "flex" } }}>
-              Bem-vindo, Vinicius Jangeli.
-            </Typography>
-            <Avatar {...stringAvatar("Vinicius Jangeli")} />
-          </Box>
-        </Toolbar>
-      </AppBar>
-
-      <Drawer
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          "& .MuiDrawer-paper": {
-            width: drawerWidth,
-            boxSizing: "border-box",
-          },
+          ) : (
+            <>
+              <Box sx={{display: 'flex', alignItems: 'center'}}>
+                {menuItems.map((item) => (
+                  <MenuButton key={item.text} color="inherit" onClick={item.onClick}>
+                    {item.text}
+                  </MenuButton>
+                ))}
+              </Box>
+              <Box sx={{display: 'flex', alignItems: 'center'}}>
+                <Typography>Bem vindo, Vinicius Jangeli.</Typography>
+                <IconButton
+                  size="large"
+                  aria-label="account of current user"
+                  aria-controls="menu-appbar"
+                  aria-haspopup="true"
+                  onClick={handleMenu}
+                  color="inherit"
+                >
+                  <Avatar>
+                    <AccountCircle />
+                  </Avatar>
+                </IconButton>
+              </Box>
+            </>
+          )}
+        </StyledToolbar>
+      </StyledAppBar>
+      <Menu
+        id="menu-appbar"
+        anchorEl={anchorEl}
+        anchorOrigin={{
+          vertical: "top",
+          horizontal: "right",
         }}
-        variant="persistent"
-        anchor="left"
-        open={open}
+        keepMounted
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "right",
+        }}
+        open={Boolean(anchorEl)}
+        onClose={handleClose}
       >
-        <DrawerHeader>
-          <img src="/images/Logo.svg" alt="Logo Uniteca" width={150} />
-          <IconButton onClick={handleDrawerClose}>
-            {theme.direction === "ltr" ? (
-              <ChevronLeftIcon />
-            ) : (
-              <ChevronRightIcon />
-            )}
-          </IconButton>
-        </DrawerHeader>
-        <Divider />
-        <List>
-          {routes.map((route) => (
-            <Link key={route.key} href={route.link}>
-              <ListItem
-                disablePadding
-              >
-                <ListItemButton>
-                  <ListItemIcon>{route.icon}</ListItemIcon>
-                  <ListItemText primary={route.name} />
-                </ListItemButton>
-              </ListItem>
-            </Link>
-          ))}
-        </List>
+        <MenuItem onClick={() => router.push('/perfil')}>Meu Perfil</MenuItem>
+        <MenuItem onClick={() => console.log('Logout')}>Sair</MenuItem>
+      </Menu>
+      <Drawer
+        anchor="right"
+        open={drawerOpen}
+        onClose={handleDrawerToggle}
+      >
+        {drawer}
       </Drawer>
-    </Box>
+    </>
   );
 }

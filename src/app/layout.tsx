@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import NewNavBar from "./components/NavBar/NavBar";
+import NavBar from "./components/NavBar/NavBar";
 
 
 const montserrat = localFont({
@@ -21,11 +21,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="ptBr">
       <body
         className={`${montserrat.variable} antialiased`}
       >
-        <NewNavBar/>
+        <NavBar/>
         {children}
       </body>
     </html>

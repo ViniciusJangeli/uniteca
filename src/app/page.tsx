@@ -8,9 +8,10 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = true;
+    // const token = localStorage.getItem('token');
     if (token) {
-      router.push('/home');
+      router.push('/inicio');
     }
   }, [router]);
 

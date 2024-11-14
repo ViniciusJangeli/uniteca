@@ -1,112 +1,220 @@
-"use client";
-import Logo from "@/app/components/General/Logo";
-import api from "@/utils/api";
-import { Alert, Box, Button, TextField, Typography } from "@mui/material";
-import Link from "next/link";
-import { useForm } from "react-hook-form";
-import toast from "react-hot-toast";
+'use client'
+
+import React, { useState } from 'react'
+import { 
+  Box, 
+  Button, 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  Checkbox, 
+  FormControlLabel, 
+  TextField, 
+  IconButton, 
+  InputAdornment,
+  Snackbar,
+  Link,
+  Grid
+} from '@mui/material'
+import { Visibility, VisibilityOff } from '@mui/icons-material'
+import { ThemeProvider, createTheme } from '@mui/material/styles'
+import Image from 'next/image'
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useForm } from 'react-hook-form'
+import api from "@/utils/api";
+import toast from "react-hot-toast";
 
-type FormValues = {
-  login: string;
-  password: string;
-};
 
-export default function LoginScreen() {
-  const {
-    handleSubmit,
-    register,
-    formState: { errors },
-  } = useForm<FormValues>();
-  const [errorLogin, setErrorLogin] = useState(false);
+const theme = createTheme({
+  palette: {
+    primary: { main: '#0089B6' },
+    secondary: { main: '#1D3557' },
+    background: { default: '#FBFBFB' },
+  },
+  components: {
+    MuiCard: {
+      styleOverrides: {
+        root: { borderColor: '#0089B6', borderWidth: 2, borderStyle: 'solid' },
+      },
+    },
+    MuiCardHeader: {
+      styleOverrides: {
+        root: { backgroundColor: '#0089B6', color: 'white' },
+      },
+    },
+  },
+})
+
+interface FormValues {
+  email: string
+  password: string
+}
+
+export default function LoginPage() {
+
+  const { handleSubmit, register, formState: { errors } } = useForm<FormValues>()
+  const [showPassword, setShowPassword] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [errorLogin, setErrorLogin] = useState(false)
+  const [openSnackbar, setOpenSnackbar] = useState(false)
+  const router = useRouter()
 
   const handleErrorLogin = () => {
-    setErrorLogin(true);
-  };
+    setErrorLogin(true)
+  }
 
-  const router = useRouter();
+  router.push('/inicio')
 
   const onSubmit = async (data: FormValues) => {
     toast.promise(
       api.post("/auth/login", data).then((res) => {
         if (res.data && res.data.token) {
-          const token = res.data.token;
-          localStorage.setItem("token", token);
-          router.push("/home");
-          return "Login bem-sucedido!";
+          const token = res.data.token
+          localStorage.setItem("token", token)
+          router.push("/inicio")
+          return "Login bem-sucedido!"
         } else {
-          throw new Error("Seu CPF/e-mail e/ou senha estão incorretos!");
+          throw new Error("Seu CPF/e-mail e/ou senha estão incorretos!")
         }
       }),
       {
         loading: "Carregando...",
         success: (message) => message,
         error: (err) => {
-          handleErrorLogin();
-          return err.response?.data.message || "Erro ao fazer login";
+          handleErrorLogin()
+          return err.response?.data.message || "Erro ao fazer login"
         },
       }
-    );
-  };
+    )
+  }
+
+  const handleCloseSnackbar = (event?: React.SyntheticEvent | Event, reason?: string) => {
+    if (reason === 'clickaway') return
+    setOpenSnackbar(false)
+  }
 
   return (
-    <Box className="flex">
-      <Box className="relative w-3/5 h-screen bg-cover bg-center bg-[url('/images/bg-login.png')]">
-        <Box className="absolute inset-0 bg-[#0089B633]"></Box>
-      </Box>
+    <ThemeProvider theme={theme}>
+      <Grid container sx={{ minHeight: '100vh' }}>
+        {/* Imagem Lateral */}
+        <Grid item xs={0} md={6} position="relative">
+          <Image
+            src='/bg-login.png'
+            alt="Library Background"
+            fill
+            style={{ objectFit: 'cover' }}
+            priority
+          />
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 137, 182, 0.1)',
+              display: { xs: 'none', md: 'block' }
+            }}
+          />
+        </Grid>
 
-      <section className="h-screen w-2/5 flex flex-col items-center justify-center gap-12">
-        <Logo />
-        <Box className="flex flex-col gap-4">
-          <Box>
-            <Typography className="text-primary_text text-xl">
-              Entre com seu
-              <span className="text-second_text"> CPF ou E-mail </span>
-              cadastrado na
-              <span className="text-second_text"> UniTeca</span>.
-            </Typography>
-          </Box>
-          <Box>
-            <form
-              onSubmit={handleSubmit(onSubmit)}
-              className="flex flex-col gap-4"
-            >
-              <TextField
-                placeholder="Digite seu CPF ou E-mail"
-                label="CPF/E-mail"
-                required
-                error={!!errors.login}
-                helperText={errors.login ? "Este campo é obrigatório" : ""}
-                {...register("login", { required: true })}
-              />
-              <TextField
-                placeholder="Digite sua Senha"
-                label="Senha"
-                type="password"
-                required
-                error={!!errors.password}
-                helperText={errors.password ? "Este campo é obrigatório" : ""}
-                {...register("password", { required: true })}
-              />
-              {errorLogin && <Alert variant="filled" severity="error">Seu CPF/e-mail e/ou senha estão incorretos!</Alert>}
-              <Button
-                type="submit"
-                variant="contained"
-                className="bg-primary_text hover:bg-second_text h-16"
-              >
-                <Typography className="text-3xl font-bold">Entrar</Typography>
-              </Button>
-            </form>
-
-            <Link href={"/"} className="flex items-center justify-end h-12">
-              <Typography className="text-second_text text-lg hover:text-primary_text">
-                Esqueceu sua Senha?
-              </Typography>
-            </Link>
-          </Box>
-        </Box>
-      </section>
-    </Box>
-  );
+        <Grid 
+          item 
+          xs={12} 
+          md={6} 
+          sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            flexDirection: 'column',
+            justifyContent: 'center',
+            gap: 4,
+            bgcolor: 'background.default',
+            p: 3
+          }}
+        >
+          <Image src="/images/Logo.svg" alt="Logo Uniteca" width={350} height={250} />
+          <Card sx={{ maxWidth: 400, width: '100%', boxShadow: 3, border: 'none' }}>
+            <CardHeader
+              title="Login"
+              subheader="Entre com sua conta para acessar o sistema"
+              titleTypographyProps={{ align: 'center', variant: 'h5', fontWeight: 'bold' }}
+              subheaderTypographyProps={{ align: 'center', color: 'white' }}
+            />
+            <CardContent>
+              <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ mt: 1 }}>
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="email"
+                  label="Email"
+                  autoComplete="email"
+                  autoFocus
+                  {...register("email", { required: "Email é obrigatório" })}
+                  error={!!errors.email}
+                  helperText={errors.email?.message}
+                />
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  label="Senha"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  {...register("password", { required: "Senha é obrigatória" })}
+                  error={!!errors.password}
+                  helperText={errors.password?.message}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          aria-label="toggle password visibility"
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge="end"
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox 
+                      value="remember" 
+                      color="primary" 
+                      checked={rememberMe} 
+                      onChange={(e) => setRememberMe(e.target.checked)} 
+                    />
+                  }
+                  label="Lembrar-me"
+                />
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  sx={{ mt: 3, mb: 2 }}
+                  disabled={loading}
+                >
+                  {loading ? 'Entrando...' : 'Entrar'}
+                </Button>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                  <Link href="#" variant="body2" color="primary">
+                    Esqueceu sua senha?
+                  </Link>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        message="Login realizado com sucesso"
+      />
+    </ThemeProvider>
+  )
 }
