@@ -7,9 +7,12 @@ import CustomInput from "@/app/components/Geral/CustomInput";
 import { useForm } from "react-hook-form";
 import toast from 'react-hot-toast'
 import api from "@/utils/api";
+import { useRouter } from "next/navigation";
 
 
 export default function CadastroLivros() {
+
+  const router = useRouter()
 
   const {
     register,
@@ -17,20 +20,22 @@ export default function CadastroLivros() {
     formState: {errors}
   } = useForm()
 
-  const onSubmit = (data: object) => {
+
+  const onSubmit = async (data: object) => {
     toast.promise(
-      api.post('/livros/criar', data),
-      {
-        loading: 'Carregando...',
-        success: (response) => {
-          return response.data.message
-        },
-        error: (err) => {
-          return err.response.data.message
+      api.post("/livros/criar", data), {
+          loading: 'Carregando...',
+          success: (response) => {
+            router.push("/livros/consultar")
+            return response.data.result.message
+          },
+          error: (error) => {
+            console.log(error)
+            return error.response.data.message
+          }
         }
-      }
-    )
-  }
+    );
+  };
 
 
   return (
@@ -102,7 +107,7 @@ export default function CadastroLivros() {
                 placeholder="Ex: 32"
                 helperText="Insira o total de páginas do livro."
                 register={register('totalPaginas', { required: true })}
-                error={errors.paginas}
+                error={errors.totalPaginas}
                 typeInput='number'
               />
               <CustomInput
@@ -110,7 +115,7 @@ export default function CadastroLivros() {
                 placeholder="Ex: 5"
                 helperText="Insira a quantidade de cópias que temos em acervo."
                 register={register('totalExemplares', { required: true })}
-                error={errors.copias}
+                error={errors.totalExemplares}
                 typeInput='number'
               />
               <CustomInput

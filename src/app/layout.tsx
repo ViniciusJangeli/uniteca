@@ -1,19 +1,19 @@
-import type { Metadata } from "next";
+'use client';
+
+import { QueryClient, QueryClientProvider } from "react-query";
 import localFont from "next/font/local";
 import "./globals.css";
 import NavBar from "./components/NavBar/NavBar";
-
+import { Toaster } from "react-hot-toast";
+import Head from "next/head";
 
 const montserrat = localFont({
   src: "./fonts/Montserrat-Regular.ttf",
   variable: "--font-montserrat",
-  weight: "400"
-})
+  weight: "400",
+});
 
-export const metadata: Metadata = {
-  title: "UniTeca",
-  description: "Seu Software de Gestão para Bibliotecas!",
-};
+const queryClient = new QueryClient();
 
 export default function RootLayout({
   children,
@@ -21,13 +21,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ptBr">
-      <body
-        className={`${montserrat.variable} antialiased`}
-      >
-        <NavBar/>
-        {children}
-      </body>
-    </html>
+    <QueryClientProvider client={queryClient}>
+      <html lang="ptBr">
+        <Head>
+          <title>UniTeca</title>
+          <meta name="description" content="Seu Software de Gestão para Bibliotecas!" />
+        </Head>
+        <body className={`${montserrat.variable} antialiased`}>
+          <Toaster position="bottom-center" />
+          <NavBar />
+          {children}
+        </body>
+      </html>
+    </QueryClientProvider>
   );
 }
