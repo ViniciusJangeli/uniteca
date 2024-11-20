@@ -1,123 +1,187 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
-import { 
-  Container, 
-  Typography, 
-  Box, 
-  TextField, 
-  Button
-} from '@mui/material';
+import React from 'react';
+import { Container, Typography, Grid, Button, TextField, CircularProgress } from '@mui/material';
 import { Edit } from '@mui/icons-material';
+import { useParams, useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import toast from 'react-hot-toast';
+import { useQuery } from 'react-query';
+import api from '@/utils/api';
 
 interface Livro {
   id: string;
   titulo: string;
   autor: string;
   isbn: string;
-  anoPublicacao: string;
-  quantidade: number;
+  ano: number;
+  edicao: number;
+  editora: string;
+  volume: number;
+  totalPaginas: number;
+  totalExemplares: number;
 }
 
 const EditarLivro: React.FC = () => {
-  const [livro, setLivro] = useState<Livro>({
-    id: '',
-    titulo: '',
-    autor: '',
-    isbn: '',
-    anoPublicacao: '',
-    quantidade: 0
-  });
+  const { livro } = useParams();
+  const router = useRouter();
 
-  useEffect(() => {
-    // Simulating API call to fetch book data
-    const fetchLivro = async () => {
-      // In a real application, you would fetch the book data based on an ID, perhaps from the URL
-      const mockLivro: Livro = {
-        id: '1',
-        titulo: '1984',
-        autor: 'George Orwell',
-        isbn: '9780451524935',
-        anoPublicacao: '1949',
-        quantidade: 5
-      };
-      setLivro(mockLivro);
-    };
+  const { isLoading, error, data } = useQuery<Livro>(['Obtendo dados de um livro especifico', livro], 
+    () => api.get(`/livros/informacoes/${livro}`).then((res) => res.data)
+  );
 
-    fetchLivro();
-  }, []);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<Livro>();
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target;
-    setLivro(prevLivro => ({
-      ...prevLivro,
-      [name]: name === 'quantidade' ? parseInt(value) : value
-    }));
+
+  const onSubmit = async (data: Livro) => {
+    const formData = {
+      ...data,
+      id: livro,
+    }
+    toast.promise(
+      api.put(`/livros/atualizar/${livro}`, formData), {
+        loading: 'Atualizando...',
+        success: (response) => {
+          router.push("/livros/consultar");
+          return response.data.message;
+        },
+        error: (error) => {
+          return error.response.data.error;
+        }
+      }
+    );
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    // Here you would typically send this data to your backend
-    console.log(livro);
-    // Show success message or redirect
-  };
+  if (isLoading) return (
+    <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <Typography variant="h4" component="h1" gutterBottom align="center">
+        Carregando...
+      </Typography>
+      <CircularProgress />
+    </Container>
+  );
+
+  if (error) return (
+    <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <Typography variant="h4" component="h1" gutterBottom align="center">
+        Erro ao carregar os dados do livro
+      </Typography>
+    </Container>
+  );
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ color: '#1D3557', mb: 4 }}>
+    <Container maxWidth="lg" sx={{ mt: 4 }}>
+      <Typography variant="h4" component="h1" gutterBottom align="center">
         Editar Livro
       </Typography>
-      <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        <TextField
-          fullWidth
-          label="Título"
-          name="titulo"
-          value={livro.titulo}
-          onChange={handleChange}
-          required
-        />
-        <TextField
-          fullWidth
-          label="Autor"
-          name="autor"
-          value={livro.autor}
-          onChange={handleChange}
-          required
-        />
-        <TextField
-          fullWidth
-          label="ISBN"
-          name="isbn"
-          value={livro.isbn}
-          onChange={handleChange}
-          required
-        />
-        <TextField
-          fullWidth
-          label="Ano de Publicação"
-          name="anoPublicacao"
-          value={livro.anoPublicacao}
-          onChange={handleChange}
-          required
-        />
-        <TextField
-          fullWidth
-          label="Quantidade"
-          name="quantidade"
-          type="number"
-          value={livro.quantidade}
-          onChange={handleChange}
-          required
-        />
-        <Button 
-          type="submit" 
-          variant="contained" 
-          startIcon={<Edit />}
-          sx={{ bgcolor: '#0089B6', '&:hover': { bgcolor: '#005387' } }}
-        >
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Grid container spacing={2}>
+          {/* Título ocupa duas colunas */}
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Título"
+              defaultValue={data?.titulo}
+              {...register('titulo', { required: 'Título é obrigatório' })}
+              error={!!errors.titulo}
+              helperText={errors.titulo ? errors.titulo.message : ''}
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Autor"
+              defaultValue={data?.autor}
+              {...register('autor', { required: 'Autor é obrigatório' })}
+              error={!!errors.autor}
+              helperText={errors.autor ? errors.autor.message : ''}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="ISBN"
+              defaultValue={data?.isbn}
+              {...register('isbn', { required: 'ISBN é obrigatório' })}
+              error={!!errors.isbn}
+              helperText={errors.isbn ? errors.isbn.message : ''}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Ano de Publicação"
+              defaultValue={data?.ano}
+              type='number'
+              {...register('ano', { required: 'Ano de publicação é obrigatório'})}
+              error={!!errors.ano}
+              helperText={errors.ano ? errors.ano.message : ''}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Edição"
+              defaultValue={data?.edicao}
+              type='number'
+              {...register('edicao', { required: 'Edição é obrigatória' })}
+              error={!!errors.edicao}
+              helperText={errors.edicao ? errors.edicao.message : ''}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Volume"
+              type='number'
+              defaultValue={data?.volume}
+              {...register('volume', { required: 'Volume é obrigatório' })}
+              error={!!errors.volume}
+              helperText={errors.volume ? errors.volume.message : ''}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Editora"
+              defaultValue={data?.editora}
+              {...register('editora', { required: 'Editora é obrigatória' })}
+              error={!!errors.editora}
+              helperText={errors.editora ? errors.editora.message : ''}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              defaultValue={data?.totalPaginas}
+              label="Total de Páginas"
+              type='number'
+              {...register('totalPaginas', { required: 'Total de páginas é obrigatório' })}
+              error={!!errors.totalPaginas}
+              helperText={errors.totalPaginas ? errors.totalPaginas.message : ''}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Quantidade de Exemplares"
+              type="number"
+              defaultValue={data?.totalExemplares}
+              {...register('totalExemplares', { required: 'Quantidade de exemplares é obrigatória' })}
+              error={!!errors.totalExemplares}
+              helperText={errors.totalExemplares ? errors.totalExemplares.message : ''}
+            />
+          </Grid>
+        </Grid>
+        <Button type="submit" variant="contained" sx={{ mt: 2, mb: 4, width: '100%' }} startIcon={<Edit />}>
           Atualizar Livro
         </Button>
-      </Box>
+      </form>
     </Container>
   );
 };

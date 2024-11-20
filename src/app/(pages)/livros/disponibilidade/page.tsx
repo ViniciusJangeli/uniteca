@@ -1,52 +1,76 @@
-'use client'
+"use client";
 
-import React, { useState } from 'react';
-import { 
-  Box, 
-  Typography, 
+import React, { useState } from "react";
+import {
+  Box,
+  Typography,
   Container,
   Paper,
   Button,
+  CircularProgress,
   Grid,
   Card,
   CardContent,
-  CardActions
-} from '@mui/material';
-import { styled } from '@mui/material/styles';
-import CustomInput from '@/app/components/Geral/CustomInput';
+  CardActions,
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
+import Autocomplete from "@mui/material/Autocomplete";
+import TextField from "@mui/material/TextField";
+import { useQuery } from "react-query";
+import api from "@/utils/api";
 
-// Componente estilizado para o status do livro
-const StatusBadge = styled(Typography)<{ disponivel: boolean }>(({ theme, disponivel }) => ({
-  padding: theme.spacing(1, 2),
-  borderRadius: theme.shape.borderRadius,
-  fontWeight: 'bold',
-  backgroundColor: disponivel ? '#4caf50' : '#f44336',
-  color: 'white',
-  display: 'inline-block',
-}));
+const StatusBadge = styled(Typography)<{ disponivel: boolean }>(
+  ({ theme, disponivel }) => ({
+    padding: theme.spacing(1, 2),
+    borderRadius: theme.shape.borderRadius,
+    fontWeight: "bold",
+    backgroundColor: disponivel ? "#4caf50" : "#f44336",
+    color: "white",
+    display: "inline-block",
+  })
+);
 
-// Dados de exemplo para os livros
-const livros = [
-  { id: 1, titulo: 'Dom Quixote', autor: 'Miguel de Cervantes', disponivel: true },
-  { id: 2, titulo: '1984', autor: 'George Orwell', disponivel: false },
-  { id: 3, titulo: 'Cem Anos de Solidão', autor: 'Gabriel García Márquez', disponivel: true },
-  { id: 4, titulo: 'O Pequeno Príncipe', autor: 'Antoine de Saint-Exupéry', disponivel: false },
-  { id: 5, titulo: 'Crime e Castigo', autor: 'Fiódor Dostoiévski', disponivel: true },
-];
+interface Livro {
+  id: string;
+  titulo: string;
+  autor: string;
+}
+
+interface Disponibilidade {
+  disponivel: boolean;
+  exemplaresDisponiveis: number;
+}
 
 export default function ConsultaDisponibilidade() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<typeof livros>([]);
-  const [hasSearched, setHasSearched] = useState(false);
+  const [selectedLivro, setSelectedLivro] = useState<Livro | null>(null);
+  const [disponibilidade, setDisponibilidade] =
+    useState<Disponibilidade | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleSearch = () => {
-    const results = livros.filter(livro => 
-      livro.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      livro.autor.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setSearchResults(results);
-    setHasSearched(true);
+  const {
+    data: livros,
+    isLoading: livrosLoading,
+    error: livrosError,
+  } = useQuery("livros", () =>
+    api.get("/livros/todos").then((res) => res.data)
+  );
+
+  const handleCheckAvailability = async (livroId: string) => {
+    setLoading(true);
+    try {
+      const response = await api.post(
+        `/livros/disponibilidade?livroId=${livroId}`
+      );
+      setDisponibilidade(response.data);
+    } catch (error) {
+      console.error("Erro ao verificar disponibilidade:", error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (livrosLoading) return <CircularProgress />;
+  if (livrosError) return <Typography>Erro ao carregar livros</Typography>;
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -55,70 +79,76 @@ export default function ConsultaDisponibilidade() {
           Consulta de Disponibilidade
         </Typography>
         <Paper sx={{ p: 3, mb: 4 }}>
-          <Grid container spacing={2} alignItems="flex-end">
-            <Grid item xs={12} md={9}>
-              <CustomInput
-                title="Pesquisar Livro"
-                placeholder="Digite o título ou autor do livro"
-                helperText="Pesquise por título ou autor para verificar a disponibilidade."
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <Button 
-                variant="contained" 
-                fullWidth 
-                onClick={handleSearch}
-                sx={{ 
-                  bgcolor: '#0089B6', 
-                  '&:hover': { bgcolor: '#005387' },
-                  height: '56px'  // Para alinhar com o CustomInput
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12}>
+              <Autocomplete
+                options={livros || []}
+                isOptionEqualToValue={(option: Livro, value) =>
+                  option.id === value.id
+                }
+                getOptionLabel={(option) =>
+                  `${option.titulo} - ${option.autor}`
+                }
+                renderOption={(props, option) => (
+                  <li {...props} key={option.id}>
+                    {" "}
+                    {/* Usar o id único como chave */}
+                    {`${option.titulo} - ${option.autor}`}
+                  </li>
+                )}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Selecione um livro"
+                    variant="outlined"
+                  />
+                )}
+                onChange={(_, value) => {
+                  setSelectedLivro(value);
+                  if (value) handleCheckAvailability(value.id);
                 }}
-              >
-                Pesquisar
-              </Button>
+                loading={livrosLoading}
+                loadingText="Carregando..."
+                noOptionsText="Nenhum livro encontrado"
+              />
             </Grid>
           </Grid>
         </Paper>
 
-        {hasSearched && (
-          <Box>
-            <Typography variant="h5" gutterBottom>
-              Resultados da Pesquisa
-            </Typography>
-            {searchResults.length > 0 ? (
-              <Grid container spacing={3}>
-                {searchResults.map((livro) => (
-                  <Grid item xs={12} sm={6} key={livro.id}>
-                    <Card>
-                      <CardContent>
-                        <Typography variant="h6" component="div">
-                          {livro.titulo}
-                        </Typography>
-                        <Typography color="text.secondary">
-                          {livro.autor}
-                        </Typography>
-                        <Box sx={{ mt: 2 }}>
-                          <StatusBadge disponivel={livro.disponivel}>
-                            {livro.disponivel ? 'Disponível' : 'Indisponível'}
-                          </StatusBadge>
-                        </Box>
-                      </CardContent>
-                      <CardActions>
-                        <Button 
-                          size="small" 
-                          color="primary"
-                          disabled={!livro.disponivel}
-                        >
-                          {livro.disponivel ? 'Fazer Empréstimo' : 'Indisponível'}
-                        </Button>
-                      </CardActions>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            ) : (
-              <Typography>Nenhum livro encontrado. Tente outra pesquisa.</Typography>
-            )}
+        {selectedLivro && disponibilidade && (
+          <Card>
+            <CardContent>
+              <Typography variant="h6" component="div">
+                {selectedLivro.titulo}
+              </Typography>
+              <Typography color="text.secondary">
+                {selectedLivro.autor}
+              </Typography>
+              <Box sx={{ mt: 2 }}>
+                <StatusBadge disponivel={disponibilidade.disponivel}>
+                  {disponibilidade.disponivel
+                    ? `Disponível - ${disponibilidade.exemplaresDisponiveis} exemplares`
+                    : "Indisponível"}
+                </StatusBadge>
+              </Box>
+            </CardContent>
+            <CardActions>
+              <Button
+                size="small"
+                color="primary"
+                disabled={!disponibilidade.disponivel}
+              >
+                {disponibilidade.disponivel
+                  ? "Fazer Empréstimo"
+                  : "Indisponível"}
+              </Button>
+            </CardActions>
+          </Card>
+        )}
+
+        {loading && (
+          <Box sx={{ textAlign: "center", mt: 4 }}>
+            <CircularProgress />
           </Box>
         )}
       </Container>

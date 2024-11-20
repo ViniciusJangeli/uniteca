@@ -27,10 +27,9 @@ export default function CadastroLivros() {
           loading: 'Carregando...',
           success: (response) => {
             router.push("/livros/consultar")
-            return response.data.result.message
+            return response.data.message
           },
           error: (error) => {
-            console.log(error)
             return error.response.data.message
           }
         }

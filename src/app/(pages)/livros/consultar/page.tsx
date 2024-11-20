@@ -8,9 +8,11 @@ import {
   Paper,
   TextField
 } from '@mui/material';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { DataGrid, GridActionsCellItem, GridColDef } from '@mui/x-data-grid';
 import { useQuery } from 'react-query';
 import api from "@/utils/api";
+import { Edit } from '@mui/icons-material';
+import { useRouter } from "next/navigation";
 
 interface Book {
   id: string;
@@ -25,20 +27,33 @@ interface Book {
   isbn: string;
 }
 
-const columns: GridColDef[] = [
-  { field: 'titulo', headerName: 'Título', width: 300 },
-  { field: 'autor', headerName: 'Autor', width: 230 },
-  { field: 'ano', headerName: 'Ano de Publicação', type: 'number', width: 180 },
-  { field: 'editora', headerName: 'Editora', width: 150 },
-  { field: 'edicao', headerName: 'Edição', width: 150 },
-  { field: 'volume', headerName: 'Volume', width: 150 },
-  { field: 'totalPaginas', headerName: 'Páginas', width: 150 },
-  { field: 'totalExemplares', headerName: 'Exemplares no Acervo', width: 150 },
-  { field: 'isbn', headerName: 'ISBN', width: 150 },
-];
 
 export default function ConsultaLivros() {
   const [text, setText] = useState('');
+
+  const router = useRouter()
+
+  const columns: GridColDef[] = [
+    { field: 'editar', type: 'actions', headerName: 'Editar Livro', width: 100, getActions: (params) => [
+    <GridActionsCellItem
+      key={params.row.id}
+      icon={<Edit/>}
+      label='Editar Livro'
+      onClick={() => 
+        router.push(`/livros/editar/${params.row.id}`)
+      }
+    />]
+    },
+    { field: 'titulo', headerName: 'Título', width: 300 },
+    { field: 'autor', headerName: 'Autor', width: 230 },
+    { field: 'ano', headerName: 'Ano de Publicação', type: 'number', width: 150 },
+    { field: 'editora', headerName: 'Editora', width: 150 },
+    { field: 'edicao', headerName: 'Edição', width: 100 },
+    { field: 'volume', headerName: 'Volume', width: 100 },
+    { field: 'totalPaginas', headerName: 'Páginas', width: 100 },
+    { field: 'totalExemplares', headerName: 'Em Acervo', width: 100 },
+    { field: 'isbn', headerName: 'ISBN', width: 150 },
+  ];
 
   const handlerText = (value: string) => {
     setText(value);
