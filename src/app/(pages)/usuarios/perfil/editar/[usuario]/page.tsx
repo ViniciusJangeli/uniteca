@@ -33,9 +33,7 @@ const EditarUsuario: React.FC = () => {
   });
 
   useEffect(() => {
-    // Simulating API call to fetch user data
     const fetchUsuario = async () => {
-      // In a real application, you would fetch the user data based on an ID, perhaps from the URL
       const mockUsuario: Usuario = {
         id: '1',
         nome: 'João Silva',
@@ -59,9 +57,7 @@ const EditarUsuario: React.FC = () => {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // Here you would typically send this data to your backend
-    console.log(usuario);
-    // Show success message or redirect
+
   };
 
   return (

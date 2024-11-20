@@ -30,7 +30,7 @@ const ProcurarUsuario: React.FC = () => {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
 
   const handleSearch = () => {
-    // Simulating API call
+
     const mockUsuarios: Usuario[] = [
       { id: 1, nome: "João Silva", email: "joao@email.com", telefone: "(11) 99999-9999", dataRegistro: "2023-01-15" },
       { id: 2, nome: "Maria Santos", email: "maria@email.com", telefone: "(11) 88888-8888", dataRegistro: "2023-02-20" },

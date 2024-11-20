@@ -50,9 +50,7 @@ const PerfilUsuario: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
 
   useEffect(() => {
-    // Simulating API calls to fetch user data, loan history, and fines
     const fetchUserData = async () => {
-      // In a real application, you would fetch this data from your backend
       const mockUsuario: Usuario = {
         id: '1',
         nome: 'João Silva',

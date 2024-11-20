@@ -31,7 +31,6 @@ const ConsultarEmprestimo: React.FC = () => {
   const [emprestimos, setEmprestimos] = useState<Emprestimo[]>([]);
 
   const handleSearch = () => {
-    // Simulating API call
     const mockEmprestimos: Emprestimo[] = [
       { id: 1, livro: "1984", usuario: "João Silva", dataEmprestimo: "2023-05-01", dataDevolucao: "2023-05-15", status: "Devolvido" },
       { id: 2, livro: "Dom Quixote", usuario: "Maria Santos", dataEmprestimo: "2023-05-10", dataDevolucao: "2023-05-24", status: "Em andamento" },

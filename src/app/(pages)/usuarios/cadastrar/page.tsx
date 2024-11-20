@@ -20,12 +20,11 @@ const CadastrarUsuario: React.FC = () => {
   const [email, setEmail] = useState('');
   const [telefone, setTelefone] = useState('');
   const [tipo, setTipo] = useState('');
+  const [cpf, setCpf] = useState('');
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // Here you would typically send this data to your backend
-    console.log({ nome, email, telefone, tipo });
-    // Reset form or show success message
+    console.log({ nome, email, telefone, tipo, cpf });
   };
 
   return (
@@ -56,6 +55,13 @@ const CadastrarUsuario: React.FC = () => {
           onChange={(e) => setTelefone(e.target.value)}
           required
         />
+        <TextField
+          fullWidth
+          label="CPF"
+          value={cpf}
+          onChange={(e) => setCpf(e.target.value)}
+          required
+        />
         <FormControl fullWidth>
           <InputLabel id="tipo-usuario-label">Tipo de Usuário</InputLabel>
           <Select
@@ -67,8 +73,8 @@ const CadastrarUsuario: React.FC = () => {
             required
           >
             <MenuItem value="Estudante">Estudante</MenuItem>
-            <MenuItem value="Professor">Professor</MenuItem>
-            <MenuItem value="Funcionário">Funcionário</MenuItem>
+            <MenuItem value="Bibliotecário(a) | Pleno">Bibliotecário(a) | Pleno</MenuItem>
+            <MenuItem value="Bibliotecário(a) | Senior">Bibliotecário(a) | Senior</MenuItem>
           </Select>
         </FormControl>
         <Button 

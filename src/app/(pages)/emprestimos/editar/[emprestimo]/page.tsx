@@ -35,9 +35,7 @@ const EditarEmprestimo: React.FC = () => {
   });
 
   useEffect(() => {
-    // Simulating API call to fetch loan data
     const fetchEmprestimo = async () => {
-      // In a real application, you would fetch the loan data based on an ID, perhaps from the URL
       const mockEmprestimo: Emprestimo = {
         id: '1',
         livroId: '1',
@@ -62,9 +60,8 @@ const EditarEmprestimo: React.FC = () => {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // Here you would typically send this data to your backend
     console.log(emprestimo);
-    // Show success message or redirect
+
   };
 
   return (

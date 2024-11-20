@@ -21,9 +21,7 @@ const RegistrarDevolucao: React.FC = () => {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // Here you would typically send this data to your backend
     console.log({ emprestimo, dataDevolucao });
-    // Reset form or show success message
   };
 
   return (
