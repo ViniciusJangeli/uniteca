@@ -1,90 +1,71 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Container, 
   Typography, 
   Box, 
   Paper, 
   Grid,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
+  Avatar,
   Tabs,
   Tab,
-  Avatar
+  Button
 } from '@mui/material';
 import { Person, Book, AttachMoney } from '@mui/icons-material';
-
-interface Usuario {
-  id: string;
-  nome: string;
-  email: string;
-  telefone: string;
-  tipo: string;
-  dataCadastro: string;
-}
-
-interface Emprestimo {
-  id: string;
-  livroTitulo: string;
-  dataEmprestimo: string;
-  dataDevolucao: string;
-  status: string;
-}
-
-interface Multa {
-  id: string;
-  valor: number;
-  motivo: string;
-  dataPagamento: string;
-}
+import { useParams } from 'next/navigation';
+import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { useQuery } from 'react-query'; 
+import api from "@/utils/api";
+import { useRouter } from 'next/navigation';
 
 const PerfilUsuario: React.FC = () => {
-  const [usuario, setUsuario] = useState<Usuario | null>(null);
-  const [emprestimos, setEmprestimos] = useState<Emprestimo[]>([]);
-  const [multas, setMultas] = useState<Multa[]>([]);
-  const [tabValue, setTabValue] = useState(0);
+  const { usuario: id } = useParams();
+  const [tabValue, setTabValue] = useState(0); 
+  const router = useRouter()
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      const mockUsuario: Usuario = {
-        id: '1',
-        nome: 'João Silva',
-        email: 'joao.silva@email.com',
-        telefone: '(11) 99999-9999',
-        tipo: 'Estudante',
-        dataCadastro: '2022-01-15'
-      };
-      setUsuario(mockUsuario);
+  
+  const { isLoading, error, data } = useQuery(
+    ['usuario', id],
+    async () => {
+      const response = await api.get(`/usuarios/consultar/${id}`);
+      return response.data;
+    },
+    { 
+      enabled: !!id, 
+    }
+  );
 
-      const mockEmprestimos: Emprestimo[] = [
-        { id: '1', livroTitulo: '1984', dataEmprestimo: '2023-01-15', dataDevolucao: '2023-01-29', status: 'Devolvido' },
-        { id: '2', livroTitulo: 'Dom Quixote', dataEmprestimo: '2023-03-01', dataDevolucao: '2023-03-15', status: 'Devolvido' },
-        { id: '3', livroTitulo: 'Cem Anos de Solidão', dataEmprestimo: '2023-05-01', dataDevolucao: '2023-05-15', status: 'Em andamento' },
-      ];
-      setEmprestimos(mockEmprestimos);
+  if (isLoading) {
+    return <Typography>Carregando...</Typography>;
+  }
 
-      const mockMultas: Multa[] = [
-        { id: '1', valor: 5.00, motivo: 'Atraso na devolução', dataPagamento: '2023-02-05' },
-        { id: '2', valor: 10.00, motivo: 'Livro danificado', dataPagamento: '2023-04-10' },
-      ];
-      setMultas(mockMultas);
-    };
+  if (error) {
+    return <Typography>Erro ao carregar os dados do usuário</Typography>;
+  }
 
-    fetchUserData();
-  }, []);
+  const { emprestimos, multas } = data;
 
+  
+  const emprestimosColumns: GridColDef[] = [
+    { field: 'livroTitulo', headerName: 'Livro', width: 250 },
+    { field: 'dataEmprestimo', headerName: 'Data de Empréstimo', width: 180 },
+    { field: 'dataDevolucao', headerName: 'Data de Devolução', width: 180 },
+    { field: 'status', headerName: 'Status', width: 150 },
+  ];
+
+  
+  const multasColumns: GridColDef[] = [
+    { field: 'motivo', headerName: 'Motivo', width: 250 },
+    { field: 'valor', headerName: 'Valor', width: 150, valueFormatter: (params) => `R$ ${params}` },
+    { field: 'dataPagamento', headerName: 'Data de Pagamento', width: 180 },
+  ];
+
+  
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
-  if (!usuario) {
-    return <Typography>Carregando...</Typography>;
-  }
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
@@ -97,14 +78,19 @@ const PerfilUsuario: React.FC = () => {
           </Grid>
           <Grid item xs>
             <Typography variant="h4" component="h1" gutterBottom sx={{ color: '#1D3557' }}>
-              {usuario.nome}
+              {data.nome}
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              {usuario.email} | {usuario.telefone}
+              {data.email} | {data.telefone}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {usuario.tipo} | Cadastrado em: {usuario.dataCadastro}
+              {data.permissoes[0]?.permissao?.titulo} | Cadastrado em: {new Date(data.criadoEm).toLocaleDateString()}
             </Typography>
+          </Grid>
+          <Grid item>
+            <Button variant="contained" color="primary" onClick={() => router.push(`/usuarios/perfil/editar/${id}`)}>
+              Editar Usuário
+            </Button>
           </Grid>
         </Grid>
       </Paper>
@@ -117,51 +103,25 @@ const PerfilUsuario: React.FC = () => {
       </Box>
 
       {tabValue === 0 && (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Livro</TableCell>
-                <TableCell>Data de Empréstimo</TableCell>
-                <TableCell>Data de Devolução</TableCell>
-                <TableCell>Status</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {emprestimos.map((emprestimo) => (
-                <TableRow key={emprestimo.id}>
-                  <TableCell>{emprestimo.livroTitulo}</TableCell>
-                  <TableCell>{emprestimo.dataEmprestimo}</TableCell>
-                  <TableCell>{emprestimo.dataDevolucao}</TableCell>
-                  <TableCell>{emprestimo.status}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <Paper sx={{ p: 2 }}>
+          <DataGrid 
+            rows={emprestimos} 
+            columns={emprestimosColumns} 
+            disableRowSelectionOnClick
+            getRowId={(row) => row.id}
+          />
+        </Paper>
       )}
 
       {tabValue === 1 && (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Motivo</TableCell>
-                <TableCell>Valor</TableCell>
-                <TableCell>Data de Pagamento</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {multas.map((multa) => (
-                <TableRow key={multa.id}>
-                  <TableCell>{multa.motivo}</TableCell>
-                  <TableCell>R$ {multa.valor.toFixed(2)}</TableCell>
-                  <TableCell>{multa.dataPagamento}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <Paper sx={{ p: 2, mt: 2 }}>
+          <DataGrid 
+            rows={multas} 
+            columns={multasColumns} 
+            disableRowSelectionOnClick
+            getRowId={(row) => row.id}
+          />
+        </Paper>
       )}
     </Container>
   );

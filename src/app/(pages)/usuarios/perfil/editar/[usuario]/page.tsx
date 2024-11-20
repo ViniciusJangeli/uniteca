@@ -1,71 +1,123 @@
-'use client'
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { 
-  Container, 
-  Typography, 
-  Box, 
-  TextField, 
+import React, { useState } from "react";
+import {
+  Container,
+  Typography,
+  Box,
+  TextField,
   Button,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  SelectChangeEvent
-} from '@mui/material';
-import { Edit } from '@mui/icons-material';
+  SelectChangeEvent,
+} from "@mui/material";
+import { Edit } from "@mui/icons-material";
+import { useQuery } from "react-query";
+import api from "@/utils/api";
+import { useParams, useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 interface Usuario {
+  cpf: string;
   id: string;
   nome: string;
   email: string;
   telefone: string;
-  tipo: string;
+  permissaoId: string;
 }
 
 const EditarUsuario: React.FC = () => {
+  const { usuario: id } = useParams();
+  const router = useRouter();
+
   const [usuario, setUsuario] = useState<Usuario>({
-    id: '',
-    nome: '',
-    email: '',
-    telefone: '',
-    tipo: ''
+    id: "",
+    nome: "",
+    email: "",
+    telefone: "",
+    cpf: "",
+    permissaoId: "",
   });
 
-  useEffect(() => {
-    const fetchUsuario = async () => {
-      const mockUsuario: Usuario = {
-        id: '1',
-        nome: 'João Silva',
-        email: 'joao@email.com',
-        telefone: '(11) 99999-9999',
-        tipo: 'Estudante'
-      };
-      setUsuario(mockUsuario);
-    };
+  const {
+    isLoading: loadingPermissoes,
+    error: errorPermissoes,
+    data: permissoes,
+  } = useQuery(
+    "Todas as Permissoes Cadastradas no Banco de dados",
+    async () => {
+      const response = await api.get("/permissoes/consultar/permissoes");
+      return response.data;
+    }
+  );
 
-    fetchUsuario();
-  }, []);
+  const { isLoading, error } = useQuery(
+    ["Consulta do perfil especifico do usuário", id],
+    async () => {
+      const response = await api.get(`/usuarios/consultar/${id}`);
+      return response.data;
+    },
+    {
+      enabled: !!id,
+      onSuccess: (data) => {
+        const formData = {
+          ...data,
+          permissaoId:
+            data.permissoes[0]?.permissao?.permissoesRelacao[0]?.permissaoId,
+        };
+        setUsuario(formData);
+      },
+    }
+  );
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent<string>) => {
+  const handleChange = (
+    event:
+      | React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+      | SelectChangeEvent<string>
+  ) => {
     const { name, value } = event.target;
-    setUsuario(prevUsuario => ({
+    setUsuario((prevUsuario) => ({
       ...prevUsuario,
-      [name]: value
+      [name]: value,
     }));
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    toast.promise(api.put(`/usuarios/editar/${id}`, usuario), {
+      loading: "Atualizando usuário...",
+      success: (response) => {
+        router.push("/usuarios/procurar");
+        return response.data.message || "Usuário atualizado com sucesso!";
+      },
+      error: (error) => {
+        return error.response?.data?.message || "Erro ao atualizar o usuário";
+      },
+    });
   };
+
+  if (isLoading || loadingPermissoes) return <>Carregando dados...</>;
+  if (error || errorPermissoes) return <>Erro ao carregar os dados...</>;
 
   return (
     <Container maxWidth="sm" sx={{ mt: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ color: '#1D3557', mb: 4 }}>
+      <Typography
+        variant="h4"
+        component="h1"
+        gutterBottom
+        align="center"
+        sx={{ color: "#1D3557", mb: 4 }}
+      >
         Editar Usuário
       </Typography>
-      <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <Box
+        component="form"
+        onSubmit={handleSubmit}
+        sx={{ display: "flex", flexDirection: "column", gap: 3 }}
+      >
         <TextField
           fullWidth
           label="Nome"
@@ -85,6 +137,15 @@ const EditarUsuario: React.FC = () => {
         />
         <TextField
           fullWidth
+          label="CPF"
+          name="cpf"
+          type="cpf"
+          value={usuario.cpf}
+          onChange={handleChange}
+          required
+        />
+        <TextField
+          fullWidth
           label="Telefone"
           name="telefone"
           value={usuario.telefone}
@@ -92,26 +153,35 @@ const EditarUsuario: React.FC = () => {
           required
         />
         <FormControl fullWidth>
-          <InputLabel id="tipo-usuario-label">Tipo de Usuário</InputLabel>
+          <InputLabel id="permissao-label">Tipo de Usuário</InputLabel>
           <Select
-            labelId="tipo-usuario-label"
-            id="tipo-usuario"
-            name="tipo"
-            value={usuario.tipo}
+            labelId="permissao-label"
+            id="permissao"
+            name="permissaoId"
+            value={usuario.permissaoId}
             label="Tipo de Usuário"
-            onChange={handleChange}
+            onChange={(e) => {
+              const { value } = e.target;
+              setUsuario((prevUsuario) => ({
+                ...prevUsuario,
+                permissaoId: value,
+              }));
+            }}
             required
           >
-            <MenuItem value="Estudante">Estudante</MenuItem>
-            <MenuItem value="Professor">Professor</MenuItem>
-            <MenuItem value="Funcionário">Funcionário</MenuItem>
+            {permissoes.map((permissao: { id: string; titulo: string }) => (
+              <MenuItem key={permissao.id} value={permissao.id}>
+                {permissao.titulo}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
-        <Button 
-          type="submit" 
-          variant="contained" 
+
+        <Button
+          type="submit"
+          variant="contained"
           startIcon={<Edit />}
-          sx={{ bgcolor: '#0089B6', '&:hover': { bgcolor: '#005387' } }}
+          sx={{ bgcolor: "#0089B6", "&:hover": { bgcolor: "#005387" } }}
         >
           Atualizar Usuário
         </Button>

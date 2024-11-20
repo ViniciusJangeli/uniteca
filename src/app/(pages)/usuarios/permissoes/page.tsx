@@ -160,6 +160,7 @@ const Permissoes: React.FC = () => {
         {permissoes.map((permissao) => (
           <Grid item xs={12} sm={6} md={4} key={permissao.id}>
             <Paper elevation={3} sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <Typography>Tipo de:</Typography>
               <Typography variant="h6" component="h2" gutterBottom>
                 {permissao.titulo}
               </Typography>
@@ -176,7 +177,6 @@ const Permissoes: React.FC = () => {
         ))}
       </Grid>
 
-      {/* Modal de Confirmação de Deletação */}
       <Dialog open={openDeleteDialog} onClose={handleDeleteDialogClose}>
         <DialogTitle>Confirmar Exclusão</DialogTitle>
         <DialogContent>
@@ -190,7 +190,6 @@ const Permissoes: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Modal de Adicionar/Editar Permissão */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle>{novaPermissao.id ? 'Editar Permissão' : 'Adicionar Nova Permissão'}</DialogTitle>
         <DialogContent>

@@ -1,11 +1,11 @@
-'use client'
+'use client';
 
 import React, { useState } from 'react';
-import { 
-  Container, 
-  Typography, 
-  Box, 
-  TextField, 
+import {
+  Container,
+  Typography,
+  Box,
+  TextField,
   Button,
   FormControl,
   InputLabel,
@@ -14,18 +14,50 @@ import {
   SelectChangeEvent
 } from '@mui/material';
 import { PersonAdd } from '@mui/icons-material';
+import { useQuery } from 'react-query';
+import api from '@/utils/api';
+import { useRouter } from "next/navigation";
+import toast from 'react-hot-toast';
 
 const CadastrarUsuario: React.FC = () => {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [telefone, setTelefone] = useState('');
-  const [tipo, setTipo] = useState('');
   const [cpf, setCpf] = useState('');
+  const [permissaoId, setPermissaoId] = useState('');
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const router = useRouter()
+
+  const { isLoading, error, data: permissoes } = useQuery('Todas as Permissoes Cadastradas no Banco de dados', () =>
+    api.get('/permissoes/consultar/permissoes').then((res) => res.data)
+  );
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log({ nome, email, telefone, tipo, cpf });
+    
+    toast.promise(
+      api.post('/usuarios/criar', {
+        nome,
+        email,
+        telefone,
+        cpf,
+        permissaoId
+      }),
+      {
+        loading: 'Carregando...',
+        success: (response) => {
+          router.push('/usuarios/procurar');
+          return response.data.message;
+        },
+        error: (error) => {
+          return error.response?.data?.message || 'Erro desconhecido';
+        }
+      }
+    );
   };
+
+  if (isLoading) return <>Carregando permissões...</>;
+  if (error) return <>Erro ao carregar permissões...</>;
 
   return (
     <Container maxWidth="sm" sx={{ mt: 4 }}>
@@ -62,21 +94,25 @@ const CadastrarUsuario: React.FC = () => {
           onChange={(e) => setCpf(e.target.value)}
           required
         />
+        
         <FormControl fullWidth>
-          <InputLabel id="tipo-usuario-label">Tipo de Usuário</InputLabel>
+          <InputLabel id="permissao-label">Tipo de Usuário</InputLabel>
           <Select
-            labelId="tipo-usuario-label"
-            id="tipo-usuario"
-            value={tipo}
+            labelId="permissao-label"
+            id="permissao"
+            value={permissaoId}
             label="Tipo de Usuário"
-            onChange={(e: SelectChangeEvent) => setTipo(e.target.value as string)}
+            onChange={(e: SelectChangeEvent) => setPermissaoId(e.target.value as string)}
             required
           >
-            <MenuItem value="Estudante">Estudante</MenuItem>
-            <MenuItem value="Bibliotecário(a) | Pleno">Bibliotecário(a) | Pleno</MenuItem>
-            <MenuItem value="Bibliotecário(a) | Senior">Bibliotecário(a) | Senior</MenuItem>
+            {permissoes.map((permissao: { id: string, titulo: string }) => (
+              <MenuItem key={permissao.id} value={permissao.id}>
+                {permissao.titulo}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
+        
         <Button 
           type="submit" 
           variant="contained" 
