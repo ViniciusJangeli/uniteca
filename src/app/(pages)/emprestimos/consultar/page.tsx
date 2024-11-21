@@ -7,18 +7,16 @@ import {
   Box, 
   TextField, 
   Button, 
-  Paper, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow
+  Paper 
 } from '@mui/material';
-import { Search } from '@mui/icons-material';
+import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
+import { Search, Edit } from '@mui/icons-material';
+import { useQuery } from 'react-query';
+import api from '@/utils/api';
+import { useRouter } from 'next/navigation';
 
 interface Emprestimo {
-  id: number;
+  id: string;
   livro: string;
   usuario: string;
   dataEmprestimo: string;
@@ -28,20 +26,50 @@ interface Emprestimo {
 
 const ConsultarEmprestimo: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [emprestimos, setEmprestimos] = useState<Emprestimo[]>([]);
+  const router = useRouter();
 
-  const handleSearch = () => {
-    const mockEmprestimos: Emprestimo[] = [
-      { id: 1, livro: "1984", usuario: "João Silva", dataEmprestimo: "2023-05-01", dataDevolucao: "2023-05-15", status: "Devolvido" },
-      { id: 2, livro: "Dom Quixote", usuario: "Maria Santos", dataEmprestimo: "2023-05-10", dataDevolucao: "2023-05-24", status: "Em andamento" },
-    ];
-    setEmprestimos(mockEmprestimos);
-  };
+  const columns: GridColDef[] = [
+    { 
+      field: 'editar', 
+      type: 'actions', 
+      headerName: 'Editar', 
+      width: 100, 
+      getActions: (params) => [
+        <GridActionsCellItem
+          key={params.row.id}
+          icon={<Edit />}
+          label="Editar"
+          onClick={() => router.push(`/emprestimos/editar/${params.row.id}`)}
+        />
+      ]
+    },
+    { field: 'livro', headerName: 'Livro', width: 250 },
+    { field: 'usuario', headerName: 'Usuário', width: 250 },
+    { field: 'dataEmprestimo', headerName: 'Data de Empréstimo', width: 180 },
+    { field: 'dataDevolucaoPrevista', headerName: 'Devolução Prevista', width: 180 },
+    { field: 'dataDevolucao', headerName: 'Data de Devolução', width: 180 },
+    { field: 'status', headerName: 'Status', width: 150 }
+  ];
+
+  const { isLoading, error, data } = useQuery<Emprestimo[]>('emprestimos', 
+    () => api.get('/emprestimo/todos').then((res) => res.data)
+  );
+
+  if (isLoading) return <>Loading...</>;
+  if (error) return <>Error...</>;
+
+  const filteredRows = data?.filter((row) =>
+    Object.values(row).some(
+      (value) =>
+        value &&
+        value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ color: '#1D3557', mb: 4 }}>
-        Consultar Empréstimo
+        Consultar Empréstimos
       </Typography>
       <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
         <TextField
@@ -54,40 +82,19 @@ const ConsultarEmprestimo: React.FC = () => {
         <Button 
           variant="contained" 
           startIcon={<Search />}
-          onClick={handleSearch}
           sx={{ bgcolor: '#0089B6', '&:hover': { bgcolor: '#005387' } }}
         >
           Buscar
         </Button>
       </Box>
-      {emprestimos.length > 0 && (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Livro</TableCell>
-                <TableCell>Usuário</TableCell>
-                <TableCell>Data de Empréstimo</TableCell>
-                <TableCell>Data de Devolução</TableCell>
-                <TableCell>Status</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {emprestimos.map((emprestimo) => (
-                <TableRow key={emprestimo.id}>
-                  <TableCell>{emprestimo.id}</TableCell>
-                  <TableCell>{emprestimo.livro}</TableCell>
-                  <TableCell>{emprestimo.usuario}</TableCell>
-                  <TableCell>{emprestimo.dataEmprestimo}</TableCell>
-                  <TableCell>{emprestimo.dataDevolucao}</TableCell>
-                  <TableCell>{emprestimo.status}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
+      <Paper sx={{ width: '100%', height: '60vh' }}>
+        <DataGrid 
+          columns={columns}
+          rows={filteredRows || []}
+          getRowId={(row) => row.id}
+          disableRowSelectionOnClick
+        />
+      </Paper>
     </Container>
   );
 };

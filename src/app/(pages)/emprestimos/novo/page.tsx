@@ -1,30 +1,71 @@
 'use client'
 
 import React, { useState } from 'react';
-import { 
-  Container, 
-  Typography, 
-  Box, 
-  TextField, 
-  Button, 
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  SelectChangeEvent
+import {
+  Container,
+  Typography,
+  Box,
+  TextField,
+  Button,
+  Autocomplete,
 } from '@mui/material';
 import { LibraryAdd } from '@mui/icons-material';
+import { useQuery } from 'react-query';
+import api from '@/utils/api';
+import { useRouter } from "next/navigation";
+import toast from 'react-hot-toast';
+
+interface Livro {
+  id: string;
+  titulo: string;
+}
+
+interface Usuario {
+  id: string;
+  nome: string;
+}
 
 const FazerEmprestimo: React.FC = () => {
-  const [livro, setLivro] = useState('');
-  const [usuario, setUsuario] = useState('');
+  const [livro, setLivro] = useState<Livro | null>(null);
+  const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [dataEmprestimo, setDataEmprestimo] = useState('');
   const [dataDevolucao, setDataDevolucao] = useState('');
+  
+  const router = useRouter();
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const { isLoading: loadingLivros, error: errorLivros, data: livrosDisponiveis } = useQuery('livrosDisponiveis', () =>
+    api.get('/livros/disponiveis').then((res) => res.data.livros)
+  );
+
+  const { isLoading: loadingUsuarios, error: errorUsuarios, data: usuarios } = useQuery("Todos os usuarios registrados no banco de dados",
+    () => api.get("/usuarios/consultar/todos").then((res) => res.data)
+  );
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    toast.promise(
+      api.post('/emprestimo/criar', {
+        livroId: livro?.id,
+        usuarioId: usuario?.id,
+        dataEmprestimo,
+        dataDevolucao,
+      }),
+      {
+        loading: 'Registrando empréstimo...',
+        success: (response) => {
+          router.push('/emprestimos');
+          return response.data.message;
+        },
+        error: (error) => {
+          return error.response?.data?.message || 'Erro ao registrar empréstimo';
+        }
+      }
+    );
   };
+
+  if (loadingLivros || loadingUsuarios) return <>Carregando...</>;
+  if (errorLivros || errorUsuarios) return <>Erro ao carregar dados...</>;
 
   return (
     <Container maxWidth="sm" sx={{ mt: 4 }}>
@@ -32,34 +73,25 @@ const FazerEmprestimo: React.FC = () => {
         Fazer Empréstimo
       </Typography>
       <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        <FormControl fullWidth>
-          <InputLabel id="livro-select-label">Livro</InputLabel>
-          <Select
-            labelId="livro-select-label"
-            id="livro-select"
-            value={livro}
-            label="Livro"
-            onChange={(e: SelectChangeEvent) => setLivro(e.target.value as string)}
-          >
-            <MenuItem value="1984">1984</MenuItem>
-            <MenuItem value="Dom Quixote">Dom Quixote</MenuItem>
-            <MenuItem value="Cem Anos de Solidão">Cem Anos de Solidão</MenuItem>
-          </Select>
-        </FormControl>
-        <FormControl fullWidth>
-          <InputLabel id="usuario-select-label">Usuário</InputLabel>
-          <Select
-            labelId="usuario-select-label"
-            id="usuario-select"
-            value={usuario}
-            label="Usuário"
-            onChange={(e: SelectChangeEvent) => setUsuario(e.target.value as string)}
-          >
-            <MenuItem value="João Silva">João Silva</MenuItem>
-            <MenuItem value="Maria Santos">Maria Santos</MenuItem>
-            <MenuItem value="Pedro Oliveira">Pedro Oliveira</MenuItem>
-          </Select>
-        </FormControl>
+        
+        <Autocomplete
+          options={livrosDisponiveis}
+          getOptionLabel={(option) => option.titulo}
+          value={livro}
+          onChange={(event, newValue) => setLivro(newValue)}
+          renderInput={(params) => <TextField {...params} label="Livro" required />}
+          isOptionEqualToValue={(option, value) => option.id === value?.id}
+        />
+        
+        <Autocomplete
+          options={usuarios}
+          getOptionLabel={(option) => option.nome}
+          value={usuario}
+          onChange={(event, newValue) => setUsuario(newValue)}
+          renderInput={(params) => <TextField {...params} label="Usuário" required />}
+          isOptionEqualToValue={(option, value) => option.id === value?.id}
+        />
+        
         <TextField
           fullWidth
           label="Data de Empréstimo"
@@ -67,7 +99,9 @@ const FazerEmprestimo: React.FC = () => {
           value={dataEmprestimo}
           onChange={(e) => setDataEmprestimo(e.target.value)}
           InputLabelProps={{ shrink: true }}
+          required
         />
+        
         <TextField
           fullWidth
           label="Data de Devolução"
@@ -75,10 +109,12 @@ const FazerEmprestimo: React.FC = () => {
           value={dataDevolucao}
           onChange={(e) => setDataDevolucao(e.target.value)}
           InputLabelProps={{ shrink: true }}
+          required
         />
-        <Button 
-          type="submit" 
-          variant="contained" 
+        
+        <Button
+          type="submit"
+          variant="contained"
           startIcon={<LibraryAdd />}
           sx={{ bgcolor: '#0089B6', '&:hover': { bgcolor: '#005387' } }}
         >
