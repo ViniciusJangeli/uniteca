@@ -45,6 +45,8 @@ export default function NavBar() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
+  const idUser = localStorage.getItem('userId')
+
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
@@ -81,7 +83,7 @@ export default function NavBar() {
       </List>
       <Divider />
       <List>
-        <ListItem sx={{cursor: 'pointer'}} onClick={() => router.push('/perfil')} component="div">
+        <ListItem sx={{cursor: 'pointer'}} onClick={() => router.push(`/usuarios/perfil/${idUser}`)} component="div">
           <ListItemIcon><AccountCircle /></ListItemIcon>
           <ListItemText primary="Meu Perfil" />
         </ListItem>
@@ -156,7 +158,7 @@ export default function NavBar() {
         open={Boolean(anchorEl)}
         onClose={handleClose}
       >
-        <MenuItem onClick={() => router.push('/perfil')}>Meu Perfil</MenuItem>
+        <MenuItem onClick={() => router.push(`/usuarios/perfil/${idUser}`)}>Meu Perfil</MenuItem>
         <MenuItem onClick={handleLogout}>Sair</MenuItem>
       </Menu>
       <Drawer

@@ -22,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
-  const isRootPath = pathname === '/' || pathname === '/login';
+  const isRootPath = pathname === '/' || pathname === '/login' || pathname === '/recuperar';
 
   return (
     <QueryClientProvider client={queryClient}>

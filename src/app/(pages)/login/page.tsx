@@ -53,16 +53,19 @@ export default function LoginPage() {
       const res = await api.post("/auth/login", data);
       if (res.data && res.data.token) {
         localStorage.setItem("token", res.data.token);
+        const decodedToken = JSON.parse(atob(res.data.token.split('.')[1])); 
+        localStorage.setItem("userId", decodedToken.userId); 
         toast.success("Login bem-sucedido!");
         router.push("/inicio");
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(error.response?.data.message || "Erro ao fazer login.");
     } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <ThemeProvider theme={theme}>
@@ -186,7 +189,7 @@ export default function LoginPage() {
                 <Box
                   sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}
                 >
-                  <Link href="#" variant="body2" color="primary">
+                  <Link href="/recuperar" variant="body2" color="primary">
                     Esqueceu sua senha?
                   </Link>
                 </Box>
