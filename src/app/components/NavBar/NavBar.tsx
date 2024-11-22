@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState } from "react";
 import {
   AppBar,
@@ -59,6 +57,11 @@ export default function NavBar() {
     setDrawerOpen(!drawerOpen);
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    router.push("/");
+  };
+
   const menuItems = [
     { text: 'Início', icon: <Home />, onClick: () => router.push('/inicio') },
     { text: 'Livros', icon: <Book />, onClick: () => router.push('/livros') },
@@ -70,7 +73,7 @@ export default function NavBar() {
     <Box sx={{ width: 250 }} role="presentation" onClick={handleDrawerToggle}>
       <List>
         {menuItems.map((item, index) => (
-          <ListItem sx={{cursor: 'pointer'}} button key={item.text} onClick={item.onClick}>
+          <ListItem sx={{cursor: 'pointer'}} key={index} onClick={item.onClick} component="div">
             <ListItemIcon>{item.icon}</ListItemIcon>
             <ListItemText primary={item.text} />
           </ListItem>
@@ -78,11 +81,11 @@ export default function NavBar() {
       </List>
       <Divider />
       <List>
-        <ListItem sx={{cursor: 'pointer'}} button onClick={() => router.push('/perfil')}>
+        <ListItem sx={{cursor: 'pointer'}} onClick={() => router.push('/perfil')} component="div">
           <ListItemIcon><AccountCircle /></ListItemIcon>
           <ListItemText primary="Meu Perfil" />
         </ListItem>
-        <ListItem sx={{cursor: 'pointer'}} button onClick={() => console.log('Logout')}>
+        <ListItem sx={{cursor: 'pointer'}} onClick={handleLogout} component="div">
           <ListItemIcon><AccountCircle /></ListItemIcon>
           <ListItemText primary="Sair" />
         </ListItem>
@@ -154,7 +157,7 @@ export default function NavBar() {
         onClose={handleClose}
       >
         <MenuItem onClick={() => router.push('/perfil')}>Meu Perfil</MenuItem>
-        <MenuItem onClick={() => console.log('Logout')}>Sair</MenuItem>
+        <MenuItem onClick={handleLogout}>Sair</MenuItem>
       </Menu>
       <Drawer
         anchor="right"

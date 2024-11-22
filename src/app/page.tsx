@@ -8,14 +8,11 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = true;
-    // const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token');
     if (token) {
       router.push('/inicio');
     }
   }, [router]);
 
-  return (
-      <LoginScreen />
-  );
+  return <LoginScreen />;
 }

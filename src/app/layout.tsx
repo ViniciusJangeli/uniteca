@@ -6,6 +6,7 @@ import "./globals.css";
 import NavBar from "./components/NavBar/NavBar";
 import { Toaster } from "react-hot-toast";
 import Head from "next/head";
+import { usePathname } from 'next/navigation';  // Importando usePathname
 
 const montserrat = localFont({
   src: "./fonts/Montserrat-Regular.ttf",
@@ -20,6 +21,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pathname = usePathname();
+  const isRootPath = pathname === '/' || pathname === '/login';
+
   return (
     <QueryClientProvider client={queryClient}>
       <html lang="ptBr">
@@ -29,7 +33,7 @@ export default function RootLayout({
         </Head>
         <body className={`${montserrat.variable} antialiased`}>
           <Toaster position="bottom-center" />
-          <NavBar />
+          {!isRootPath && <NavBar />}
           {children}
         </body>
       </html>
