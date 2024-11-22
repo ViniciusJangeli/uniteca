@@ -18,6 +18,8 @@ import { useQuery } from "react-query";
 import api from "@/utils/api";
 import { useParams, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import Loading from "@/app/components/Geral/Loading";
+import Error from "@/app/components/Geral/Error";
 
 interface Usuario {
   cpf: string;
@@ -99,8 +101,8 @@ const EditarUsuario: React.FC = () => {
     });
   };
 
-  if (isLoading || loadingPermissoes) return <>Carregando dados...</>;
-  if (error || errorPermissoes) return <>Erro ao carregar os dados...</>;
+  if (isLoading || loadingPermissoes) return <Loading/>;
+  if (error || errorPermissoes) return <Error/>;
 
   return (
     <Container maxWidth="sm" sx={{ mt: 4 }}>

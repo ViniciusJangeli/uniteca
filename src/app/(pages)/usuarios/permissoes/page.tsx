@@ -21,6 +21,8 @@ import {
 import { Add, Delete, Edit } from '@mui/icons-material';
 import { useQuery } from 'react-query';
 import api from '@/utils/api';
+import Loading from '@/app/components/Geral/Loading';
+import Error from '@/app/components/Geral/Error';
 
 interface Permissao {
   id: string;
@@ -138,8 +140,9 @@ const Permissoes: React.FC = () => {
     handleDeleteDialogClose();
   };
 
-  if (isLoading) return <>Carregando permissões...</>;
-  if (error) return <>Erro ao carregar permissões...</>;
+  if (isLoading) return <Loading/>;
+  if (error) return <Error/>;
+
 
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>

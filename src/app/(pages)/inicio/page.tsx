@@ -23,6 +23,10 @@ import {
   TrendingUp,
 } from "@mui/icons-material";
 import Link from "next/link";
+import { useQuery } from 'react-query';
+import api from "@/utils/api";
+import Loading from "@/app/components/Geral/Loading";
+import Error from "@/app/components/Geral/Error";
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),
@@ -48,10 +52,16 @@ const QuickActionButton = styled(Button)(({ theme }) => ({
   },
 }));
 
+
+
 export default function DashboardPage() {
-  const totalExemplares = 1000;
-  const exemplareEmprestados = 250;
-  const exemplareDisponiveis = totalExemplares - exemplareEmprestados;
+
+  const { isLoading, error, data } = useQuery('Obtendo as estatisticas da biblioteca', 
+    () => api.get('/status/informacoes').then((res) => res.data)
+  );
+
+  if (isLoading) return <Loading/>;
+  if (error) return <Error/>;
 
   const quickActions = [
     { icon: <MenuBook />, text: "Fazer Empréstimo", link: "/emprestimos/novo" },
@@ -81,28 +91,28 @@ export default function DashboardPage() {
         </Typography>
         <Grid container spacing={3}>
           <Grid item xs={12} md={4}>
-            <StatCard sx={{cursor: 'pointer'}} elevation={3}>
+            <StatCard elevation={3}>
               <BookIcon sx={{ fontSize: 40, mr: 2 }} />
               <Box>
-                <Typography variant="h5">{totalExemplares}</Typography>
+                <Typography variant="h5">{data.totalLivros}</Typography>
                 <Typography variant="subtitle1">Total de Exemplares</Typography>
               </Box>
             </StatCard>
           </Grid>
           <Grid item xs={12} md={4}>
-            <StatCard sx={{cursor: 'pointer'}} elevation={3}>
+            <StatCard elevation={3}>
               <MenuBook sx={{ fontSize: 40, mr: 2 }} />
               <Box>
-                <Typography variant="h5">{exemplareEmprestados}</Typography>
+                <Typography variant="h5">{data.livrosEmprestados}</Typography>
                 <Typography variant="subtitle1">Emprestados</Typography>
               </Box>
             </StatCard>
           </Grid>
           <Grid item xs={12} md={4}>
-            <StatCard sx={{cursor: 'pointer'}} elevation={3}>
+            <StatCard elevation={3}>
               <BookmarkAdded sx={{ fontSize: 40, mr: 2 }} />
               <Box>
-                <Typography variant="h5">{exemplareDisponiveis}</Typography>
+                <Typography variant="h5">{data.totalDisponiveis}</Typography>
                 <Typography variant="subtitle1">Disponíveis</Typography>
               </Box>
             </StatCard>
@@ -133,21 +143,15 @@ export default function DashboardPage() {
                 Livros Mais Populares
               </Typography>
               <List sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                {[
-                  "Dom Quixote",
-                  "1984",
-                  "Cem Anos de Solidão",
-                  "O Pequeno Príncipe",
-                  "Crime e Castigo",
-                ].map((book, index) => (
+                {data.livrosPopulares.map((livro: { id: string, titulo: string }) => (
                   <ListItem
                     sx={{ border: "1px solid #005387", borderRadius: 2 }}
-                    key={index}
+                    key={livro.id}
                   >
                     <ListItemIcon>
                       <TrendingUp />
                     </ListItemIcon>
-                    <ListItemText primary={book} />
+                    <ListItemText primary={livro.titulo} />
                   </ListItem>
                 ))}
               </List>

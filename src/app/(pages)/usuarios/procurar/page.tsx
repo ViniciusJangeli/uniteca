@@ -14,6 +14,8 @@ import { useQuery } from "react-query";
 import api from "@/utils/api";
 import { DataGrid, GridActionsCellItem, GridColDef } from "@mui/x-data-grid";
 import { useRouter } from "next/navigation";
+import Loading from "@/app/components/Geral/Loading";
+import Error from "@/app/components/Geral/Error";
 
 interface Usuario {
   id: string;
@@ -47,8 +49,9 @@ const ProcurarUsuario: React.FC = () => {
     setSearchTerm(event.target.value);
   };
 
-  if (isLoading) return <>Loading...</>;
-  if (error) return <>Error...</>;
+  if (isLoading) return <Loading/>;
+  if (error) return <Error/>;
+
 
   const columns: GridColDef[] = [
     {

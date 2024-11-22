@@ -12,19 +12,20 @@ import {
   Tab,
   Button
 } from '@mui/material';
-import { Person, Book, AttachMoney } from '@mui/icons-material';
+import { Person, Book } from '@mui/icons-material';
 import { useParams } from 'next/navigation';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import { useQuery } from 'react-query'; 
 import api from "@/utils/api";
 import { useRouter } from 'next/navigation';
+import Loading from '@/app/components/Geral/Loading';
+import Error from '@/app/components/Geral/Error';
 
 const PerfilUsuario: React.FC = () => {
   const { usuario: id } = useParams();
   const [tabValue, setTabValue] = useState(0); 
   const router = useRouter()
 
-  
   const { isLoading, error, data } = useQuery(
     ['usuario', id],
     async () => {
@@ -36,36 +37,43 @@ const PerfilUsuario: React.FC = () => {
     }
   );
 
-  if (isLoading) {
-    return <Typography>Carregando...</Typography>;
-  }
+  if (isLoading) return <Loading/>;
+  if (error) return <Error/>;
 
-  if (error) {
-    return <Typography>Erro ao carregar os dados do usuário</Typography>;
-  }
 
-  const { emprestimos, multas } = data;
+  const { emprestimos } = data;
 
+  const emprestimosRows = emprestimos.map((emprestimo: { 
+    id: string; 
+    livro: { titulo: string }; 
+    dataEmprestimo: string; 
+    dataDevolucao?: string; 
+    status: string; 
+    historicoMultas: { valorMulta: number; status: string }[]; 
+  }) => ({
+    id: emprestimo.id,
+    livroTitulo: emprestimo.livro.titulo,
+    dataEmprestimo: new Date(emprestimo.dataEmprestimo).toLocaleDateString(),
+    dataDevolucao: emprestimo.dataDevolucao 
+      ? new Date(emprestimo.dataDevolucao).toLocaleDateString() 
+      : 'Não devolvido',
+    status: emprestimo.status,
+    valorMulta: emprestimo.historicoMultas?.[0]?.valorMulta || 'Sem multa',
+    statusMulta: emprestimo.historicoMultas?.[0]?.status || 'Sem multa',
+  }));
   
   const emprestimosColumns: GridColDef[] = [
     { field: 'livroTitulo', headerName: 'Livro', width: 250 },
     { field: 'dataEmprestimo', headerName: 'Data de Empréstimo', width: 180 },
     { field: 'dataDevolucao', headerName: 'Data de Devolução', width: 180 },
     { field: 'status', headerName: 'Status', width: 150 },
+    { field: 'valorMulta', headerName: 'Valor Multa', width: 100 },
+    { field: 'statusMulta', headerName: 'Status Multa', width: 100 },
   ];
 
-  
-  const multasColumns: GridColDef[] = [
-    { field: 'motivo', headerName: 'Motivo', width: 250 },
-    { field: 'valor', headerName: 'Valor', width: 150, valueFormatter: (params) => `R$ ${params}` },
-    { field: 'dataPagamento', headerName: 'Data de Pagamento', width: 180 },
-  ];
-
-  
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
-
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
@@ -98,31 +106,17 @@ const PerfilUsuario: React.FC = () => {
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
         <Tabs value={tabValue} onChange={handleTabChange} aria-label="user profile tabs">
           <Tab label="Histórico de Empréstimos" icon={<Book />} iconPosition="start" />
-          <Tab label="Multas Pagas" icon={<AttachMoney />} iconPosition="start" />
         </Tabs>
       </Box>
 
-      {tabValue === 0 && (
-        <Paper sx={{ p: 2 }}>
-          <DataGrid 
-            rows={emprestimos} 
-            columns={emprestimosColumns} 
-            disableRowSelectionOnClick
-            getRowId={(row) => row.id}
-          />
-        </Paper>
-      )}
-
-      {tabValue === 1 && (
-        <Paper sx={{ p: 2, mt: 2 }}>
-          <DataGrid 
-            rows={multas} 
-            columns={multasColumns} 
-            disableRowSelectionOnClick
-            getRowId={(row) => row.id}
-          />
-        </Paper>
-      )}
+      <Paper sx={{ p: 2 }}>
+        <DataGrid 
+          rows={emprestimosRows} 
+          columns={emprestimosColumns} 
+          disableRowSelectionOnClick
+          getRowId={(row) => row.id}
+        />
+      </Paper>
     </Container>
   );
 };

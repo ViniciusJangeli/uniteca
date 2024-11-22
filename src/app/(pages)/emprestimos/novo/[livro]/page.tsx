@@ -12,7 +12,7 @@ import {
 import { LibraryAdd } from "@mui/icons-material";
 import { useQuery } from "react-query";
 import api from "@/utils/api";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import Loading from "@/app/components/Geral/Loading";
 import Error from "@/app/components/Geral/Error";
@@ -28,10 +28,11 @@ interface Usuario {
 }
 
 const FazerEmprestimo: React.FC = () => {
+  const { livro: idLivro } = useParams();
   const [livro, setLivro] = useState<Livro | null>(null);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
-  const [dataDevolucao, setDataDevolucao] = useState("");
   const hoje = new Date().toISOString().split("T")[0];
+  const [dataDevolucao, setDataDevolucao] = useState("");
 
   const router = useRouter();
 
@@ -50,6 +51,15 @@ const FazerEmprestimo: React.FC = () => {
   } = useQuery("Todos os usuarios registrados no banco de dados", () =>
     api.get("/usuarios/consultar/todos").then((res) => res.data)
   );
+
+  React.useEffect(() => {
+    if (idLivro && livrosDisponiveis) {
+      const livroSelecionado = livrosDisponiveis.find(
+        (livro: Livro) => livro.id === idLivro
+      );
+      setLivro(livroSelecionado || null);
+    }
+  }, [idLivro, livrosDisponiveis]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

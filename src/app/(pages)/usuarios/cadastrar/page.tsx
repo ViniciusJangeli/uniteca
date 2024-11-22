@@ -18,6 +18,8 @@ import { useQuery } from 'react-query';
 import api from '@/utils/api';
 import { useRouter } from "next/navigation";
 import toast from 'react-hot-toast';
+import Loading from '@/app/components/Geral/Loading';
+import Error from '@/app/components/Geral/Error';
 
 const CadastrarUsuario: React.FC = () => {
   const [nome, setNome] = useState('');
@@ -56,8 +58,9 @@ const CadastrarUsuario: React.FC = () => {
     );
   };
 
-  if (isLoading) return <>Carregando permissões...</>;
-  if (error) return <>Erro ao carregar permissões...</>;
+  if (isLoading) return <Loading/>;
+  if (error) return <Error/>;
+
 
   return (
     <Container maxWidth="sm" sx={{ mt: 4 }}>

@@ -1,13 +1,15 @@
 'use client'
 
 import React from 'react';
-import { Container, Typography, Grid, Button, TextField, CircularProgress } from '@mui/material';
+import { Container, Typography, Grid, Button, TextField } from '@mui/material';
 import { Edit } from '@mui/icons-material';
 import { useParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { useQuery } from 'react-query';
 import api from '@/utils/api';
+import Loading from '@/app/components/Geral/Loading';
+import Error from '@/app/components/Geral/Error';
 
 interface Livro {
   id: string;
@@ -56,22 +58,9 @@ const EditarLivro: React.FC = () => {
     );
   };
 
-  if (isLoading) return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom align="center">
-        Carregando...
-      </Typography>
-      <CircularProgress />
-    </Container>
-  );
+  if (isLoading) return <Loading/>;
+  if (error) return <Error/>;
 
-  if (error) return (
-    <Container maxWidth="lg" sx={{ mt: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom align="center">
-        Erro ao carregar os dados do livro
-      </Typography>
-    </Container>
-  );
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>

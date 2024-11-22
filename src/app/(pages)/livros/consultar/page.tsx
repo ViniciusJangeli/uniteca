@@ -13,6 +13,8 @@ import { useQuery } from 'react-query';
 import api from "@/utils/api";
 import { Edit } from '@mui/icons-material';
 import { useRouter } from "next/navigation";
+import Loading from '@/app/components/Geral/Loading';
+import Error from '@/app/components/Geral/Error';
 
 interface Book {
   id: string;
@@ -63,8 +65,8 @@ export default function ConsultaLivros() {
     () => api.get('/livros/todos').then((res) => res.data)
   );
 
-  if (isLoading) return <>Loading...</>;
-  if (error) return <>Error...</>;
+  if (isLoading) return <Loading/>;
+  if (error) return <Error/>;
 
   const filteredRows = data?.filter((row) =>
     Object.values(row).some(

@@ -18,6 +18,9 @@ import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import { useQuery } from "react-query";
 import api from "@/utils/api";
+import { useRouter } from "next/navigation";
+import Loading from "@/app/components/Geral/Loading";
+import Error from "@/app/components/Geral/Error";
 
 const StatusBadge = styled(Typography)<{ disponivel: boolean }>(
   ({ theme, disponivel }) => ({
@@ -47,6 +50,8 @@ export default function ConsultaDisponibilidade() {
     useState<Disponibilidade | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const router = useRouter()
+
   const {
     data: livros,
     isLoading: livrosLoading,
@@ -69,8 +74,8 @@ export default function ConsultaDisponibilidade() {
     }
   };
 
-  if (livrosLoading) return <CircularProgress />;
-  if (livrosError) return <Typography>Erro ao carregar livros</Typography>;
+  if (livrosLoading) return <Loading/>;
+  if (livrosError) return <Error/>;
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -136,6 +141,7 @@ export default function ConsultaDisponibilidade() {
               <Button
                 size="small"
                 color="primary"
+                onClick={() => router.push(`/emprestimos/novo/${selectedLivro?.id}`)}
                 disabled={!disponibilidade.disponivel}
               >
                 {disponibilidade.disponivel
